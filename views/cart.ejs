@@ -1,0 +1,119 @@
+<%- include('./partials/header') %>
+
+<div id="cart-container">
+  <% let grandTotal = 0; %>
+  <% user.cart.forEach(function(item, index) { 
+      let quantity = item.quantity || 1;
+      let basePrice = Number(item.price);
+      let discount = Number(item.discount);
+      let platformFee = 20;
+      let itemTotal = (basePrice - discount + platformFee) * quantity;
+      grandTotal += itemTotal;
+  %>
+  <div class="w-full flex items-start px-20 py-10 gap-10 border-b border-gray-300 cart-item" data-index="<%= index %>">
+    <div class="w-[30%] rounded-md overflow-hidden shadow-md">
+      <div class="w-full flex justify-center items-center bg-yellow-500">
+        <img class="h-[12rem]" src="data:image/jpeg;base64,<%= item.image.toString('base64') %>" alt="">
+      </div>
+
+      <div class="w-full flex justify-between px-5 py-4 bg-[<%= item.panelcolor %>]">
+        <h3 class="text-2xl">Clinge Bag</h3>
+        <div class="flex items-center gap-2">
+          <form action="/cart/remove/<%= item.id %>" method="POST">
+            <button type="submit" class="text-red-600 text-sm underline">Remove</button>
+          </form>
+          <button class="decrease w-7 h-7 bg-white flex rounded-full items-center justify-center ri-subtract-line"></button>
+          <div class="quantity px-2 py-1 rounded-md bg-white text-black"><%= quantity %></div>
+          <button class="increase w-7 h-7 bg-white flex rounded-full items-center justify-center ri-add-line"></button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between px-5 py-3 bg-[<%= item.panelcolor %>]">
+        <h4 class="text-lg">Net Total</h4>
+        <h2 class="text-lg item-total">₹ <%= itemTotal %></h2>
+      </div>
+    </div>
+
+    <div class="w-[70%]">
+      <h3 class="text-xl">Price Breakdown</h3>
+      <div class="px-10 mt-5">
+        <div class="flex mt-2">
+          <h4 class="w-1/3">Total MRP</h4>
+          <h4>₹ <span class="base-price"><%= basePrice %></span> × <span class="qty"><%= quantity %></span></h4>
+        </div>
+        <div class="flex mt-2">
+          <h4 class="w-1/3">Discount on MRP</h4>
+          <h4>- ₹ <span class="discount"><%= discount %></span> × <span class="qty"><%= quantity %></span></h4>
+        </div>
+        <div class="flex mt-2">
+          <h4 class="w-1/3">Platform Fee</h4>
+          <h4>₹ 20 × <span class="qty"><%= quantity %></span></h4>
+        </div>
+        <div class="flex mt-2">
+          <h4 class="w-1/3">Shipping Fee</h4>
+          <h4>FREE</h4>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% }); %>
+
+  <!-- Grand Total -->
+  <div class="px-20 py-10 bg-gray-100 mt-10">
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-semibold">Grand Total</h2>
+      <h2 class="text-2xl font-bold text-green-600" id="grand-total">₹ <%= grandTotal %></h2>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateGrandTotal() {
+    let newGrand = 0;
+    document.querySelectorAll('.item-total').forEach(el => {
+      newGrand += parseFloat(el.textContent.replace('₹', '').trim());
+    });
+    document.getElementById('grand-total').textContent = "₹ " + newGrand;
+  }
+
+  document.querySelectorAll('.cart-item').forEach((item) => {
+    const increaseBtn = item.querySelector('.increase');
+    const decreaseBtn = item.querySelector('.decrease');
+    const quantityDisplay = item.querySelector('.quantity');
+    const itemTotalDisplay = item.querySelector('.item-total');
+    const qtySpans = item.querySelectorAll('.qty');
+
+    const basePrice = parseFloat(item.querySelector('.base-price').textContent);
+    const discount = parseFloat(item.querySelector('.discount').textContent);
+    const platformFee = 20;
+
+    let quantity = parseInt(quantityDisplay.textContent);
+
+    const updateTotals = () => {
+      if (quantity <= 0) {
+        item.remove();
+        updateGrandTotal();
+        return;
+      }
+
+      qtySpans.forEach(span => span.textContent = quantity);
+      const total = (basePrice - discount + platformFee) * quantity;
+      itemTotalDisplay.textContent = "₹ " + total;
+      updateGrandTotal();
+    };
+
+    increaseBtn.addEventListener('click', () => {
+      quantity += 1;
+      quantityDisplay.textContent = quantity;
+      updateTotals();
+    });
+
+    decreaseBtn.addEventListener('click', () => {
+      quantity -= 1;
+      quantityDisplay.textContent = quantity;
+      updateTotals();
+    });
+  });
+</script>
+
+<%- include('./partials/footer') %>
